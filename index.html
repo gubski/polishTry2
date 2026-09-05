@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Polish Learning Vault</title>
+    <!-- React, ReactDOM, Babel, and Supabase CDNs -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background: #0b0f19; color: #ffffff; overflow-x: hidden; }
+        
+        /* Video Background Mask */
+        .video-bg {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            object-fit: cover; z-index: -2; filter: brightness(0.4);
+        }
+        .bg-overlay {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            background: radial-gradient(circle, rgba(11,15,25,0.6) 0%, rgba(11,15,25,0.95) 100%);
+            z-index: -1;
+        }
+
+        /* Glassmorphism Styles */
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+        }
+
+        /* Smooth Animations & Buttons */
+        .btn-animated {
+            background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%);
+            color: #fff; border: none; padding: 14px 28px; font-weight: 700;
+            border-radius: 12px; cursor: pointer; text-transform: uppercase;
+            letter-spacing: 1px; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 4px 15px rgba(220, 38, 38, 0.4);
+            display: inline-block; text-decoration: none;
+        }
+        .btn-animated:hover {
+            transform: translateY(-3px) scale(1.02);
+            box-shadow: 0 8px 25px rgba(220, 38, 38, 0.6);
+        }
+
+        .card-animated {
+            transition: all 0.3s ease; cursor: pointer;
+        }
+        .card-animated:hover {
+            transform: translateY(-5px);
+            border-color: #dc2626;
+            box-shadow: 0 10px 20px rgba(220, 38, 38, 0.2);
+        }
+
+        /* Page Transition Animations */
+        .page-enter {
+            animation: fadeInZoom 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+        }
+        @keyframes fadeInZoom {
+            from { opacity: 0; transform: scale(0.95) translateY(10px); }
+            to { opacity: 1; transform: scale(1) translateY(0); }
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+
+        // --- SUPABASE CONFIGURATION ---
+        // Paste your Supabase credentials here:
+        const SUPABASE_URL = "YOUR_SUPABASE_URL_HERE";
+        const SUPABASE_KEY = "YOUR_SUPABASE_ANON_KEY_HERE";
+        
+        const supabase = (SUPABASE_URL !== "YOUR_SUPABASE_URL_HERE") 
+            ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY) 
+            : null;
+
+        // Local fallback data while Supabase credentials are being added
+        const DEMO_VOCAB = [
+            { id: 1, word: "Cześć", translation: "Hello", category: "Essential A1-A2" },
+            { id: 2, word: "Dziękuję", translation: "Thank you", category: "Essential A1-A2" },
+            { id: 3, word: "Bluza", translation: "Hoodie", category: "Streetwear" },
+            { id: 4, word: "Kanapa", translation: "Sofa", category: "Furniture" }
+        ];
+
+        function App() {
+            // Router-like state management
+            const [currentPage, setCurrentPage] = useState('home');
+            const [selectedCategory, setSelectedCategory] = useState(null);
+            const [vocabList, setVocabList] = useState(DEMO_VOCAB);
+            const [loading, setLoading] = useState(false);
+
+            // Fetch dynamic content from Supabase
+            useEffect(() => {
+                if (supabase) {
+                    setLoading(true);
+                    supabase.from('vocabulary').select('*')
+                        .then(({ data, error }) => {
+                            if (!error && data && data.length > 0) setVocabList(data);
+                            setLoading(false);
+                        });
+                }
+            }, []);
+
+            // Dynamically extract unique categories added to your database
+            const dynamicCategories = [...new Set(vocabList.map(item => item.category))];
+
+            return (
+                <div style={{ minHeight: '100vh', padding: '20px', display: 'flex', flexDirection: 'column' }}>
+                    {/* Background Video/GIF Layer */}
+                    <video className="video-bg" autoPlay loop muted playsInline poster="https://images.unsplash.com/photo-1519197924294-4ba991a11128?q=80&w=1920">
+                        <source src="https://assets.mixkit.co/videos/preview/mixkit-warsaw-city-center-at-night-41525-large.mp4" type="video/mp4" />
+                    </video>
+                    <div className="bg-overlay"></div>
+
+                    {/* Navigation Header */}
+                    <header className="glass-panel" style={{ padding: '15px 30px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', cursor: 'pointer' }} onClick={() => setCurrentPage('home')}>
+                            <span style={{ fontSize: '24px' }}>🇵🇱</span>
+                            <h2 style={{ fontSize: '18px', letterSpacing: '2px', fontWeight: '800' }}>POLISH VAULT</h2>
+                        </div>
+                        {currentPage !== 'home' && (
+                            <button onClick={() => setCurrentPage('dashboard')} className="btn-animated" style={{ padding: '8px 16px', fontSize: '12px' }}>
+                                ← Main Menu
+                            </button>
+                        )}
+                    </header>
+
+                    {/* Page Router */}
+                    <main style={{ flex: 1, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                        
+                        {/* 1. START / LANDING PAGE */}
+                        {currentPage === 'home' && (
+                            <div className="glass-panel page-enter" style={{ padding: '50px', textAlign: 'center', maxWidth: '600px', width: '100%' }}>
+                                <h1 style={{ fontSize: '38px', marginBottom: '15px', fontWeight: '900' }}>Witamy w Polsce</h1>
+                                <p style={{ color: '#cbd5e1', marginBottom: '30px', fontSize: '16px', lineHeight: '1.6' }}>
+                                    Master Polish grammar, vocabulary, audio native dialogues, and tutor insights in one structured environment.
+                                </p>
+                                <button className="btn-animated" onClick={() => setCurrentPage('dashboard')}>
+                                    Enter The Vault →
+                                </button>
+                            </div>
+                        )}
+
+                        {/* 2. DASHBOARD (5 MAIN SECTORS) */}
+                        {currentPage === 'dashboard' && (
+                            <div className="page-enter" style={{ width: '100%', maxWidth: '1000px' }}>
+                                <h2 style={{ textAlign: 'center', marginBottom: '30px', fontSize: '28px', textTransform: 'uppercase', letterSpacing: '2px' }}>
+                                    Select Learning Sector
+                                </h2>
+                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '20px' }}>
+                                    
+                                    <div className="glass-panel card-animated" style={{ padding: '25px' }} onClick={() => setCurrentPage('grammar')}>
+                                        <h3 style={{ color: '#dc2626', marginBottom: '10px' }}>📖 1. Grammar System</h3>
+                                        <p style={{ color: '#94a3b8', fontSize: '14px' }}>Master Cases (Mianownik, Biernik), verb conjugations, and sentence patterns.</p>
+                                    </div>
+
+                                    <div className="glass-panel card-animated" style={{ padding: '25px' }} onClick={() => setCurrentPage('vocab_menu')}>
+                                        <h3 style={{ color: '#dc2626', marginBottom: '10px' }}>📚 2. Vocabulary Bank</h3>
+                                        <p style={{ color: '#94a3b8', fontSize: '14px' }}>Explore topics: Streetwear, Furniture, Signs, Tech, Business, and Idioms.</p>
+                                    </div>
+
+                                    <div className="glass-panel card-animated" style={{ padding: '25px' }} onClick={() => alert("Audio module ready for Supabase .mp3 links!")}>
+                                        <h3 style={{ color: '#dc2626', marginBottom: '10px' }}>🎧 3. Audio & Dialogues</h3>
+                                        <p style={{ color: '#94a3b8', fontSize: '14px' }}>Listen to native street dialogues in Warsaw and practice nasal vowel drills.</p>
+                                    </div>
+
+                                    <div className="glass-panel card-animated" style={{ padding: '25px' }} onClick={() => alert("Practice tests module ready!")}>
+                                        <h3 style={{ color: '#dc2626', marginBottom: '10px' }}>🧪 4. Practice & Tests</h3>
+                                        <p style={{ color: '#94a3b8', fontSize: '14px' }}>Test your case agreement speed and vocabulary retention.</p>
+                                    </div>
+
+                                    <div className="glass-panel card-animated" style={{ padding: '25px', gridColumn: 'span 1' }} onClick={() => alert("Digital Textbook & PDF Viewer Ready!")}>
+                                        <h3 style={{ color: '#dc2626', marginBottom: '10px' }}>👩‍🏫 5. Tutor Data & PDFs</h3>
+                                        <p style={{ color: '#94a3b8', fontSize: '14px' }}>Access uploaded digital textbooks, survival tips, and native notes.</p>
+                                    </div>
+
+                                </div>
+                            </div>
+                        )}
+
+                        {/* 3. VOCABULARY CATEGORY MENU (DYNAMIC TOPICS) */}
+                        {currentPage === 'vocab_menu' && (
+                            <div className="page-enter" style={{ width: '100%', maxWidth: '800px' }}>
+                                <h2 style={{ marginBottom: '20px', textAlign: 'center' }}>Vocabulary Topics</h2>
+                                <p style={{ textAlign: 'center', color: '#94a3b8', marginBottom: '30px' }}>
+                                    Topics update instantly whenever you add new categories in Supabase.
+                                </p>
+                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '15px' }}>
+                                    {dynamicCategories.map(cat => (
+                                        <div key={cat} className="glass-panel card-animated" style={{ padding: '20px', textAlign: 'center' }}
+                                             onClick={() => { setSelectedCategory(cat); setCurrentPage('vocab_view'); }}>
+                                            <h4 style={{ fontSize: '18px', color: '#ffffff' }}>{cat}</h4>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+
+                        {/* 4. VOCABULARY PRACTICE VIEW */}
+                        {currentPage === 'vocab_view' && (
+                            <div className="page-enter" style={{ width: '100%', maxWidth: '600px' }}>
+                                <h2 style={{ textAlign: 'center', marginBottom: '20px' }}>{selectedCategory}</h2>
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                                    {vocabList.filter(item => item.category === selectedCategory).map(item => (
+                                        <div key={item.id} className="glass-panel" style={{ padding: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                            <div>
+                                                <h3 style={{ color: '#dc2626', fontSize: '22px' }}>{item.word}</h3>
+                                                <p style={{ color: '#cbd5e1', fontSize: '14px', marginTop: '4px' }}>{item.translation}</p>
+                                            </div>
+                                            {item.audio_url && (
+                                                <button className="btn-animated" style={{ padding: '8px 12px', fontSize: '12px' }} onClick={() => new Audio(item.audio_url).play()}>
+                                                    🔊 Play
+                                                </button>
+                                            )}
+                                        </div>
+                                    ))}
+                                </div>
+                                <button className="btn-animated" style={{ marginTop: '20px', width: '100%' }} onClick={() => setCurrentPage('vocab_menu')}>
+                                    ← Back to Topics
+                                </button>
+                            </div>
+                        )}
+
+                        {/* 5. GRAMMAR SECTOR */}
+                        {currentPage === 'grammar' && (
+                            <div className="page-enter" style={{ width: '100%', maxWidth: '700px' }}>
+                                <h2 style={{ textAlign: 'center', marginBottom: '20px' }}>Grammar System</h2>
+                                <div className="glass-panel" style={{ padding: '30px' }}>
+                                    <h3 style={{ color: '#dc2626', marginBottom: '10px' }}>1. Nominative Case (Mianownik)</h3>
+                                    <p style={{ color: '#cbd5e1', marginBottom: '15px', lineHeight: '1.6' }}>
+                                        Used for the subject of the sentence or after "To jest..." (This is...).
+                                    </p>
+                                    <div style={{ background: 'rgba(0,0,0,0.3)', padding: '15px', borderRadius: '8px', borderLeft: '4px solid #dc2626' }}>
+                                        <code>To jest **nowy stół**. (This is a new table.)</code>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                    </main>
+                </div>
+            );
+        }
+
+        ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+    </script>
+</body>
+</html>
